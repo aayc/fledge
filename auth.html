@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
+          rel="stylesheet">
+  </head>
+  <body>
+    <center>
+    <br /> <br /> <br /> <br />
+    <h1 class="text-4xl">1.</h1>
+    <button class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 px-12
+                   rounded" id='linkButton'>Find Your Institution</button>
+
+    <br /> <br /> <br /> <br /> <br /> <br />
+    <h1 class="text-4xl">2.</h1>
+    <h3 class="text-2xl">Add Nicknames</h3>
+    <table class="table-auto" id="accountTable">
+    </table>
+
+    <br /> <br /> <br /> <br /> <br /> <br />
+
+    <h1 class="text-4xl">3.</h1>
+    <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-6 px-12
+                   rounded" id='downloadButton'>Download Keys</button>
+    </center>
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script>
+  var publicKey = '2a57131a0ca57b7872174db14d68e5'
+  var publicToken = null
+  var accounts = null
+
+  var linkHandler = Plaid.create({
+    env: 'development',
+    clientName: 'Ledger Sync',
+    key: publicKey,
+    product: 'auth',
+    apiVersion: 'v2',
+    onLoad: function() {},
+    onSuccess: function(public_token, metadata) {
+      populateTable(public_token, metadata)
+    },
+    onExit: function(err, metadata) {
+      if (err != null) {
+        alert("Plaid API error: " + err)
+      }
+    }
+  });
+
+  document.getElementById('linkButton').onclick = function() {
+    linkHandler.open();
+    // Development example:
+    // populateTable("tokennn", {"accounts": [{"id": "id1ea0ueg09ugea0ueg09uaeg90u", "name": "name1"},
+    //                                        {"id": "id20aeg9ugea90ugea9u0gaew9ugew0u9", "name": "name2"}]})
+  };
+
+  document.getElementById('downloadButton').onclick = function() {
+    if (accounts === null ||
+        accounts.length === 0 ||
+        accounts.some((account, i) => document.getElementById("nickname" + i).value === "")) {
+      alert("Find your institution and fill in nicknames before downloading keys")
+      return
+    }
+    var keys = {
+      "public_token": publicToken,
+      "accounts": accounts.map((account, i) => {
+        return {
+          "id": account["id"],
+          "name": account["name"],
+          "nickname": document.getElementById("nickname" + i).value
+        }
+      }, {})
+    }
+
+    fetch("/download_keys", {
+      method: "POST",
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(keys)
+    })
+      .then(response => {
+        alert("Success!  You can close this tab now.")
+      })
+      .catch(err => {
+        alert("Something went wrong: " + JSON.stringify(err))
+      })
+  }
+
+  function populateTable(public_token, metadata) {
+    publicToken = public_token
+    accounts = metadata["accounts"]
+
+    var tdStart = '<td class="border px-4 py-2">'
+    var tdEnd = '</td>'
+    accountsData = accounts.map((account, i) => [createInput(i), account["name"], account["id"]])
+    accountsTags = accountsData.map(data => data.map(s => tdStart + s + tdEnd).join(""))
+    var tableHtml = accountsTags.reduce((acc, account) => acc + "<tr>" + account + "</tr>", "")
+    var tableElem = document.getElementById("accountTable")
+    tableElem.innerHTML = createTableHead() + tableHtml
+  }
+
+  function createTableHead() {
+    return '<thead><tr><td class="px-4 py-2">Ledger Nickname</td> <td class="px-4 py-2">Account Name</td> <td class="px-4 py-2">Account ID</td> </tr> </thead>'
+  }
+
+  function createInput(index) {
+    return '<input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="nickname' + index + '" type="text" placeholder="Nickname"></input>'
+  }
+</script>
+</body>
+</html>
