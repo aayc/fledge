@@ -56,7 +56,15 @@ run:
 fledge merge <credentials_file> <ledger_file> <transactions_file>
 ```
 
-**Your original ledger file will not be modified, an entirely new ledger file
-will be created.**
+**Note**: _Your original ledger file will not be modified.  An entirely new ledger file
+will be created._
 
 #### option b. sync (download + merge)
+If you are comfortable streamlining the process, run:
+
+``` sh
+fledge sync <credentials_file> <ledger_file> <institution_file>
+```
+
+This is functionally the same as downloading and merging, but without any intermediate files.
+
