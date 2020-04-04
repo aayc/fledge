@@ -2,3 +2,8 @@
 env/
 examples/
 __pycache__
+
+*.spec
+build/
+dist/
+
