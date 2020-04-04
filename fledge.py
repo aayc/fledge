@@ -36,8 +36,7 @@ class Plaid:
         )
 
     def get_access_token(self, public_token):
-        #response = self.client.Item.public_token.exchange(public_token)
-        response = {"access_token": "sample_access", "item_id": "sample_item_id"}
+        response = self.client.Item.public_token.exchange(public_token)
         return {
             "access_token": response["access_token"],
             "item_id" : response["item_id"]
